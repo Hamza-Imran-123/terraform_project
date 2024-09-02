@@ -1,0 +1,35 @@
+version: 2.1
+
+executors:
+  terraform:
+    docker:
+      - image: hashicorp/terraform:1.1.7
+    working_directory: ~/repo
+
+jobs:
+  deploy:
+    executor: terraform
+    steps:
+      - checkout
+      - run:
+          name: Install Databricks CLI
+          command: |
+            pip install databricks-cli
+      - run:
+          name: Initialize Terraform
+          command: |
+            terraform -chdir=dev init
+      - run:
+          name: Plan Terraform
+          command: |
+            terraform -chdir=dev plan -var-file="terraform.tfvars"
+      - run:
+          name: Apply Terraform
+          command: |
+            terraform -chdir=dev apply -var-file="terraform.tfvars" -auto-approve
+
+workflows:
+  version: 2
+  deploy:
+    jobs:
+      - deploy
